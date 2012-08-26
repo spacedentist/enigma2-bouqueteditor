@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import optparse
+import os
+import sys
+
+from enigma2 import *
+
+def main():
+    parser = optparse.OptionParser(usage='usage: %prog [options] <path-to-enigma2-bouquets>')
+    parser.add_option('-o', '--output', metavar='FILE', dest='output',
+        help='write JSON output to FILE (default: stdout)')
+    options, args = parser.parse_args()
+    if len(args) != 1:
+        parser.error("You must provide the path to the enigma2 bouquets files")
+
+    e2 = Enigma2()
+    e2.load(args[0])
+    json.dump(e2.data, open(options.output, 'w') if options.output else sys.stdout)
+
+if __name__ == '__main__':
+    main()

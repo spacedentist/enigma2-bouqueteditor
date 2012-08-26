@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BouquetEditor</class>
+ <widget class="QDialog" name="BouquetEditor">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>899</width>
+    <height>830</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>e2 Bouquet Editor</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QTreeWidget" name="twBouquets">
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOn</enum>
+         </property>
+         <property name="dragEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="dragDropMode">
+          <enum>QAbstractItemView::DragDrop</enum>
+         </property>
+         <property name="defaultDropAction">
+          <enum>Qt::MoveAction</enum>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::ExtendedSelection</enum>
+         </property>
+         <property name="verticalScrollMode">
+          <enum>QAbstractItemView::ScrollPerPixel</enum>
+         </property>
+         <property name="allColumnsShowFocus">
+          <bool>true</bool>
+         </property>
+         <attribute name="headerVisible">
+          <bool>false</bool>
+         </attribute>
+         <column>
+          <property name="text">
+           <string>1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QPushButton" name="pbAddBouquet">
+           <property name="text">
+            <string>Add Bouquet</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pbDelete">
+           <property name="text">
+            <string>Delete</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QListWidget" name="lwServices">
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOn</enum>
+         </property>
+         <property name="dragEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="dragDropMode">
+          <enum>QAbstractItemView::DragOnly</enum>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::ExtendedSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="leSearchServices"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbSave">
+       <property name="text">
+        <string>Save</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbSaveExit">
+       <property name="text">
+        <string>Save &amp;&amp; Exit</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pbSave</sender>
+   <signal>clicked()</signal>
+   <receiver>BouquetEditor</receiver>
+   <slot>clickedSave()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>770</x>
+     <y>805</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>712</x>
+     <y>808</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pbSaveExit</sender>
+   <signal>clicked()</signal>
+   <receiver>BouquetEditor</receiver>
+   <slot>clickedSaveExit()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>835</x>
+     <y>807</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>898</x>
+     <y>794</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>leSearchServices</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>BouquetEditor</receiver>
+   <slot>searchServices(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>892</x>
+     <y>785</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>464</x>
+     <y>804</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pbAddBouquet</sender>
+   <signal>clicked()</signal>
+   <receiver>BouquetEditor</receiver>
+   <slot>clickedAddBouquet()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>44</x>
+     <y>768</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>75</x>
+     <y>809</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pbDelete</sender>
+   <signal>clicked()</signal>
+   <receiver>BouquetEditor</receiver>
+   <slot>clickedDelete()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>395</x>
+     <y>771</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>297</x>
+     <y>764</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lwServices</sender>
+   <signal>itemDoubleClicked(QListWidgetItem*)</signal>
+   <receiver>BouquetEditor</receiver>
+   <slot>doubleclickedService(QListWidgetItem*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>689</x>
+     <y>179</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>896</x>
+     <y>218</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>clickedSave()</slot>
+  <slot>clickedSaveExit()</slot>
+  <slot>searchServices(QString)</slot>
+  <slot>clickedAddBouquet()</slot>
+  <slot>clickedDelete()</slot>
+  <slot>doubleclickedService(QListWidgetItem*)</slot>
+ </slots>
+</ui>

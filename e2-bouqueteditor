@@ -1,0 +1,177 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import optparse
+import subprocess
+import sys
+
+from PySide import QtCore, QtGui
+from ui_bouqueteditor import Ui_BouquetEditor
+
+from enigma2 import *
+
+class BouquetEditor(QtGui.QDialog):
+    e2DataRole = int(QtCore.Qt.UserRole) + 55
+
+    def __init__(self, e2, savefunc = None, streaming_host = None, parent = None):
+        QtGui.QDialog.__init__(self, parent)
+        self.e2 = e2
+        self.savefunc = savefunc
+        self.streaming_host = streaming_host
+        self.ui = Ui_BouquetEditor()
+        self.ui.setupUi(self)
+
+        for s in sorted(e2.services.itervalues(), key=lambda a: a.cleanname.lower()):
+            if s.servicetype in e2.dvb_tv_service_types:
+                item = QtGui.QListWidgetItem(s.cleanname, self.ui.lwServices)
+                item.setData(self.e2DataRole, s)
+
+        self.__add_bouquet_entry(e2.bouquets['tv'], self.ui.twBouquets.invisibleRootItem())
+
+        self.ui.twBouquets.dropMimeData = self.__twBouquets_dropMimeData
+        self.ui.twBouquets.dragMoveEvent = self.__twBouquets_dragMoveEvent
+        self.ui.twBouquets.dragEnterEvent = self.__twBouquets_dragEnterEvent
+
+        self.ui.twBouquets.invisibleRootItem().setFlags(0)
+
+    def __add_bouquet_entry(self, b, parent):
+        for e in b.items:
+            if e.type == 'bouquet':
+                item = QtGui.QTreeWidgetItem(parent, [e.name])
+                item.setFlags(
+                        QtCore.Qt.ItemFlag.ItemIsDragEnabled |
+                        QtCore.Qt.ItemFlag.ItemIsDropEnabled |
+                        QtCore.Qt.ItemFlag.ItemIsEnabled |
+                        QtCore.Qt.ItemFlag.ItemIsSelectable |
+                        QtCore.Qt.ItemFlag.ItemIsEditable
+                    )
+                item.setData(0, self.e2DataRole, e)
+                self.__add_bouquet_entry(e, item)
+                item.setExpanded(True)
+            elif e.type == 'service_entry':
+                item = QtGui.QTreeWidgetItem(parent, [e.service.cleanname])
+                item.setData(0, self.e2DataRole, e.service)
+
+    def clickedAddBouquet(self):
+        item = QtGui.QTreeWidgetItem(self.ui.twBouquets, ['New Bouquet'])
+        item.setFlags(
+                QtCore.Qt.ItemFlag.ItemIsDragEnabled |
+                QtCore.Qt.ItemFlag.ItemIsDropEnabled |
+                QtCore.Qt.ItemFlag.ItemIsEnabled |
+                QtCore.Qt.ItemFlag.ItemIsSelectable |
+                QtCore.Qt.ItemFlag.ItemIsEditable
+            )
+        item.setData(0, self.e2DataRole, Bouquet())
+
+    def clickedDelete(self):
+        for item in self.ui.twBouquets.selectedItems():
+            parent = item.parent() or self.ui.twBouquets.invisibleRootItem()
+            parent.removeChild(item)
+
+    def clickedSave(self):
+        self.__put_bouquet_entry(self.e2.bouquets['tv'], self.ui.twBouquets.invisibleRootItem())
+        self.savefunc()
+
+    def __put_bouquet_entry(self, b, parent):
+        b.items = items = []
+        for idx in range(parent.childCount()):
+            child = parent.child(idx)
+            e = child.data(0, self.e2DataRole)
+            if isinstance(e, Bouquet):
+                e.name = unicode(child.text(0))
+                items.append(e)
+                self.__put_bouquet_entry(e, child)
+            elif isinstance(e, Service):
+                items.append(BouquetService(service=e))
+
+    def clickedSaveExit(self):
+        self.clickedSave()
+        self.accept()
+
+    def searchServices(self, txt):
+        ids = self.e2.get_matching_serviceids(txt)
+        if ids is None:
+            for i in range(self.ui.lwServices.count()):
+                self.ui.lwServices.item(i).setHidden(False)
+        else:
+            for i in range(self.ui.lwServices.count()):
+                item = self.ui.lwServices.item(i)
+                item.setHidden(item.data(self.e2DataRole).id not in ids)
+
+    def doubleclickedService(self, item):
+        if self.streaming_host:
+            service = item.data(self.e2DataRole)
+            subprocess.Popen(['mplayer', '-cache', '128', 'http://{0}:8001/{1}'.format(self.streaming_host, self.e2.get_service_desc(service))])
+
+    def __twBouquets_dragEnterEvent(self, event):
+        model = QtGui.QStandardItemModel()
+        data = event.mimeData()
+        model.dropMimeData(data, QtCore.Qt.CopyAction, 0, 0, QtCore.QModelIndex())
+        itemdata = self.__dragObjects = list(model.takeItem(i, 0).data(self.e2DataRole) for i in range(model.invisibleRootItem().rowCount()))
+
+        if all(isinstance(i, Service) for i in itemdata):
+            self.ui.twBouquets.setAcceptDrops(True)
+            self.__dragObjectType = Service
+            root = self.ui.twBouquets.invisibleRootItem()
+            root.setFlags(root.flags() &~ QtCore.Qt.ItemFlag.ItemIsDropEnabled)
+        elif all(isinstance(i, Bouquet) for i in itemdata):
+            self.ui.twBouquets.setAcceptDrops(True)
+            self.__dragObjectType = Bouquet
+            root = self.ui.twBouquets.invisibleRootItem()
+            root.setFlags(root.flags() | QtCore.Qt.ItemFlag.ItemIsDropEnabled)
+        else:
+            self.ui.twBouquets.setAcceptDrops(False)
+            self.__dragObjectType = None
+
+        QtGui.QTreeWidget.dragEnterEvent(self.ui.twBouquets, event)
+
+    def __twBouquets_dragMoveEvent(self, event):
+        item = self.ui.twBouquets.itemAt(event.pos())
+        itemdata = item and item.data(0, self.e2DataRole)
+        if self.__dragObjectType is not None:
+            if item is None:
+                pass
+            elif self.__dragObjectType is Service:
+                while itemdata:
+                    if isinstance(itemdata, Bouquet):
+                        item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsDropEnabled)
+                        break
+                    else:
+                        item.setFlags(item.flags() &~ QtCore.Qt.ItemFlag.ItemIsDropEnabled)
+                        item = item.parent()
+                        itemdata = item and item.data(0, self.e2DataRole)
+            elif self.__dragObjectType is Bouquet:
+                while item:
+                    item.setFlags(item.flags() &~ QtCore.Qt.ItemFlag.ItemIsDropEnabled)
+                    item = item.parent()
+            QtGui.QTreeWidget.dragMoveEvent(self.ui.twBouquets, event)
+        else:
+            event.ignore()
+
+    def __twBouquets_dropMimeData(self, parent, index, data, action):
+        rv = type(self.ui.twBouquets).dropMimeData(self.ui.twBouquets, parent, index, data, action)
+        if rv and parent:
+            parent.setExpanded(True)
+        return rv
+
+def main():
+    parser = optparse.OptionParser(usage='usage: %prog [options] <path-to-enigma2-bouquets>')
+    parser.add_option('-o', '--output', metavar='FILE', dest='output',
+        help='write JSON output to FILE (default: stdout)')
+    parser.add_option('-s', '--streaming-host', metavar='HOSTNAME', dest='streaming_host',
+        help='host name of set top box for service previews (via http streaming on port 8001)')
+    options, args = parser.parse_args()
+    if len(args) != 1:
+        parser.error("You must provide the path to the enigma2 bouquets files")
+    location, = args
+
+    e2 = Enigma2()
+    e2.load(location)
+    e2.build_search_index()
+
+    app = QtGui.QApplication(sys.argv)
+    dialog = BouquetEditor(e2, savefunc = lambda: e2.save(location), streaming_host = options.streaming_host)
+    dialog.exec_()
+
+if __name__ == "__main__":
+    main()
