@@ -5,7 +5,6 @@ __all__ = 'Transponder Service BouquetEntry BouquetService BouquetMarker Bouquet
 
 import bisect
 import collections
-import json
 import os
 import re
 import shutil
